@@ -4,70 +4,7 @@
 	<canvas width ="300"height="300"id="canvas" style="border-style:solid;border-width:1px;"></canvas>
 
 	</div>
-	<script type="text/javascript">
-	var one = 2;
-	var context = document.getElementById("canvas").getContext("2d");
-
-
-	function drawShit(thing)
-	{
-		if(thing.shape == "blasqu")
-		{
-		context.moveTo(thing.x,thing.y);
-		context.lineTo(thing.x1,thing.y1);
-		context.lineTo(thing.x2,thing.y2);
-		context.lineTo(thing.x3,thing.y3);
-		context.fill();
-		}
-
-	}
-
-	function Points(xPOS,yPOS,xPOS1,yPOS1,xPOS2,yPOS2,xPOS3,yPOS3,type)
-	{
-		if(type == "fill")
-		{
-			this.x = xPOS;
-			this.y = yPOS;
-			this.x1 = xPOS1;
-			this.y1 = yPOS1;
-			this.x2 = xPOS2;
-			this.y2 = yPOS2;
-			this.x3 = xPOS3;
-			this.y3 = yPOS3;
-			this.shape = "blasqu";
-		}
-	}
-
-	function randomFall()
-	{
-		var xpos = 20;
-		var ypos = 20;
-		square[1] = new Points(0 + xpos,0 + ypos,15 + xpos,0 + ypos,15 + xpos,15 +ypos ,0 + xpos,15 + ypos,"fill");
-		drawShit(square[1]);
-	}
-
-	function drawText()
-	{
-		context.font = "15pt Calibri";
-		context.fillText(60 + " Seconds Left",125,20);
-
-	}
-
-	var square = new Array();
-	square[0] = new Points(0,300,300,300,300,250,0,250,"fill");
-
-	function renderScene()
-	{
-		drawText();
-		drawShit(square[0]);
-		randomFall();
-	}
-
-	setInterval(function()
-					{
-						context.clearRect ( 0 , 0 , 300 , 300 );
-						renderScene();
-					},100);
+	<script type="text/javascript" src="script.js">
 	</script>
 
 </html>
