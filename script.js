@@ -5,7 +5,9 @@ var Game = {
 	flag : 1,
 	blocks : [],
 	timedown : 60,
-	blocksReady: 1,
+	blocksReady : 1,
+	height : 450,
+	width : 450,
 }
 
 //Timer Object
@@ -36,16 +38,17 @@ var Character = function(imgloc,change,startpos,numlives){
 	this.pressedKey = [];
 	this.domElement = "";
 	this.lives = numlives;
+	this.speed = 2.0;
 }
 Character.prototype.move = function() {	
 	this.domElement.style.left = this.pos + "px";
 	switch(Game.flag) {
 		case "w":
-			if(this.pos >= 278) {
+			if(this.pos >= (Game.width - 22)) {
 				break;
 			} else {
 				this.domElement.src = "char.png";
-				this.pos += 1.5;
+				this.pos += this.speed;
 				break;
 			}
 		case "a":
@@ -53,7 +56,7 @@ Character.prototype.move = function() {
 				break;
 			} else {
 				this.domElement.src = "char1.png";
-				this.pos -= 1.5;
+				this.pos -= this.speed;
 				break;
 			}
 
@@ -66,7 +69,7 @@ var Block = function(xPos,yPos) {
 	this.x = xPos;
 	this.y = yPos;
 	this.xendpos = this.x + 20;
-	this.accel = 0.5;
+	this.accel = 1.4;
 }
 
 document.onkeydown = editFlagDown;
@@ -137,9 +140,9 @@ function randomFall(number) {
 		if(Game.blocks[max+1]) {
 			for(i=1;i<=max;i++) {
 				drawBox(Game.blocks[i]);
-				if(Game.blocks[i].y >= 280) {
+				if(Game.blocks[i].y >= Game.height - 20) {
 					delete Game.blocks[i];
-					Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+					Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width-20))+1),0);
 				} else {
 					if(i <=  Game.blocksReady)
 					{
@@ -150,7 +153,7 @@ function randomFall(number) {
 			}
 		} else {
 			for(i=1;i<=max;i++) {
-				Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+				Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width-20))+1),0);
 			}
 			Game.blocks[max+1] = "active";
 		}
@@ -169,7 +172,7 @@ function randomFall(number) {
 //TIMER
 function drawText() {
 	context.font = "15pt Calibri";
-	context.fillText(Game.timedown,260,20);
+	context.fillText(Game.timedown,Game.width-40,20);
 	
 	context.fillStyle = "red";
 	context.fillText(player.lives + " Lives Left",15,20);
@@ -186,13 +189,13 @@ function collisionCheck(max) {
 	player.endpos = player.pos + 20;
 	for(i=1;i<=max;i++) {
 		Game.blocks[i].xendpos = Game.blocks[i].x + 20;
-		if(Game.blocks[i].y >= 232 && Game.blocks[i].x <= player.endpos && Game.blocks[i].x >= player.pos) {
+		if(Game.blocks[i].y >= Game.height - 68 && Game.blocks[i].x <= player.endpos && Game.blocks[i].x >= player.pos) {
 			delete Game.blocks[i];
-			Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+			Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width - 20))+1),0);
 			player.lives--;
-		} else if (Game.blocks[i].y >= 232 && Game.blocks[i].xendpos >= player.pos && Game.blocks[i].xendpos <= player.endpos) {
+		} else if (Game.blocks[i].y >= Game.height - 68 && Game.blocks[i].xendpos >= player.pos && Game.blocks[i].xendpos <= player.endpos) {
 			delete Game.blocks[i];
-			Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+			Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width - 20))+1),0);
 			player.lives--;
 		}
 	}
@@ -204,13 +207,13 @@ function createWorld(number) {
 }
 
 setInterval(function() {
-	context.clearRect(0,0,300,300);
+	context.clearRect(0,0,Game.width,Game.height);
 	
 	//createWorld(number of blocks); Control the amount of blocks.
 	createWorld(5);
 	player.move();
 	}
-,16);
+,14);
 
 setInterval(function() {
 	Game.timedown--;
