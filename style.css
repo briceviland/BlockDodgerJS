@@ -1,0 +1,165 @@
+body
+{
+	margin-top:20px;
+	background-color:#E2E2E2;
+}
+
+div
+{
+	margin:0px;
+}
+
+
+.centeredcontent
+{
+	width: 800px;
+	margin: 0 auto;
+	text-align:center;
+	background-color:#F0FFFF;
+	border-radius:25px;
+}
+
+.panel1
+{
+	width:175px;
+	text-align:left;
+	margin-left:20px;
+
+}
+
+ul
+{
+	list-style-type:none;
+	padding:5px;
+	margin:0px;
+	background-color:#C2FFFF;
+	border-radius:13px;
+	border-style:solid;
+	border-width:5px;
+}
+li
+{
+	margin-top:15px;
+	border-style:solid;
+	border-width:2px;
+	font-family:monospace;
+	font-size:20px;
+	background-color: white;
+	padding:2px;
+	text-align:center;
+	font-weight:bold;
+	border-radius:10px;
+}
+
+.top
+{
+	margin-top:0px;
+	border-style:solid;
+	border-width:2px;
+	font-family:monospace;
+	font-size:20px;
+	background-color: white;
+	padding:2px;
+	text-align:center;
+	font-weight:bold;
+	border-radius:10px;
+}
+
+
+li:hover
+{
+	margin-top:15px;
+	border-style:solid;
+	border-width:2px;
+	font-family:monospace;
+	font-size:20px;
+	background-color: #A3CCCC;
+}
+
+.top:hover
+{
+	margin-top:0px;
+	border-style:solid;
+	border-width:2px;
+	font-family:monospace;
+	font-size:20px;
+	background-color: #A3CCCC;
+}
+
+a
+{
+	color: black;
+	text-decoration:none;
+}
+
+.headertitle
+{
+	text-align:left;
+	margin-left:20px;
+	width: 300px;
+}
+
+.picture
+{
+	border-top-left-radius:20px;
+}
+td
+{
+	margin:0px;
+	vertical-align: top;
+}
+tr
+{
+	margin:0px;
+}
+.headerlogo
+{
+	text-align:center;
+	width:150px;
+}
+.logo
+{
+	border-top-right-radius:20px;
+	border-style:solid;
+	border-color:white;
+	border-width:2px;
+}
+.details
+{
+	position:relative;
+	text-align:left;
+	background-color:#C2FFFF;
+	margin-top:15px;
+	margin-left:25px;
+	border-radius:15px;
+	font-family:tahoma;
+	font-size:17px;
+	margin-right:27px;
+	border-style:solid;
+	border-width:3px;
+	color:#4C4C4C;
+	height:300px;
+	width:300px;
+}
+.relevant
+{
+	position:absolute;
+	border-radius:15px;
+	margin:0px;
+	padding:0px;
+}
+#canvas
+{
+	z-index:1;
+	margin:0px;
+	padding:0px;
+}
+#character
+{
+	z-index:2;
+	position:absolute;
+	left:30px;
+	bottom:2px;
+	margin:0px;
+	padding:0px;
+}
