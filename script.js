@@ -62,14 +62,14 @@ Character.prototype.move = function() {
 
 	}
 }
-var player = new Character("./char.png","./char1.png",140,5)
+var player = new Character("./char.png","./char1.png",(Game.width/2) - 10,5)
 player.domElement = document.getElementById("character");
 
 var Block = function(xPos,yPos) {
 	this.x = xPos;
 	this.y = yPos;
 	this.xendpos = this.x + 20;
-	this.accel = 1.4;
+	this.accel = 1.8;
 }
 
 document.onkeydown = editFlagDown;
@@ -213,7 +213,7 @@ setInterval(function() {
 	createWorld(5);
 	player.move();
 	}
-,14);
+,16);
 
 setInterval(function() {
 	Game.timedown--;
