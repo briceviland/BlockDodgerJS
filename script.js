@@ -5,6 +5,7 @@ var Game = {
 	flag : 1,
 	blocks : [],
 	timedown : 60,
+	blocksReady: 1,
 }
 
 //Timer Object
@@ -140,8 +141,11 @@ function randomFall(number) {
 					delete Game.blocks[i];
 					Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
 				} else {
-					Game.blocks[i].y += Game.blocks[i].accel;
-					Game.blocks[i].accel += 0.01
+					if(i <=  Game.blocksReady)
+					{
+						Game.blocks[i].y += Game.blocks[i].accel;
+						Game.blocks[i].accel += 0.01;
+					}
 				}
 			}
 		} else {
@@ -210,6 +214,7 @@ setInterval(function() {
 
 setInterval(function() {
 	Game.timedown--;
+	Game.blocksReady++;
 	}
 ,1000);
 
