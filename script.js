@@ -39,6 +39,7 @@ var Character = function(imgloc,change,startpos,numlives){
 	this.domElement = "";
 	this.lives = numlives;
 	this.speed = 2.0;
+	this.honingRange = 125;
 }
 Character.prototype.move = function() {	
 	this.domElement.style.left = this.pos + "px";
@@ -66,10 +67,22 @@ var player = new Character("./char.png","./char1.png",(Game.width/2) - 10,5)
 player.domElement = document.getElementById("character");
 
 var Block = function(xPos,yPos) {
-	this.x = xPos;
+	if(xPos <= 0)
+	{
+		this.x = xPos + player.honingRange;
+	}
+	else if (xPos >= Game.width-20)
+	{
+		this.x = xPos - player.honingRange;
+	}
+	else
+	{
+		this.x = xPos;
+	}
 	this.y = yPos;
 	this.xendpos = this.x + 20;
-	this.accel = 1.8;
+	this.force = 2.5;
+	this.accelby = 0.008;
 }
 
 document.onkeydown = editFlagDown;
@@ -142,18 +155,18 @@ function randomFall(number) {
 				drawBox(Game.blocks[i]);
 				if(Game.blocks[i].y >= Game.height - 20) {
 					delete Game.blocks[i];
-					Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width-20))+1),0);
+					Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 				} else {
 					if(i <=  Game.blocksReady)
 					{
-						Game.blocks[i].y += Game.blocks[i].accel;
-						Game.blocks[i].accel += 0.01;
+						Game.blocks[i].y += Game.blocks[i].force;
+						Game.blocks[i].force += Game.blocks[i].accelby;
 					}
 				}
 			}
 		} else {
 			for(i=1;i<=max;i++) {
-				Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width-20))+1),0);
+				Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 			}
 			Game.blocks[max+1] = "active";
 		}
@@ -191,11 +204,11 @@ function collisionCheck(max) {
 		Game.blocks[i].xendpos = Game.blocks[i].x + 20;
 		if(Game.blocks[i].y >= Game.height - 68 && Game.blocks[i].x <= player.endpos && Game.blocks[i].x >= player.pos) {
 			delete Game.blocks[i];
-			Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width - 20))+1),0);
+			Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 			player.lives--;
 		} else if (Game.blocks[i].y >= Game.height - 68 && Game.blocks[i].xendpos >= player.pos && Game.blocks[i].xendpos <= player.endpos) {
 			delete Game.blocks[i];
-			Game.blocks[i] = new Block(Math.floor((Math.random()*(Game.width - 20))+1),0);
+			Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 			player.lives--;
 		}
 	}
@@ -210,10 +223,10 @@ setInterval(function() {
 	context.clearRect(0,0,Game.width,Game.height);
 	
 	//createWorld(number of blocks); Control the amount of blocks.
-	createWorld(5);
+	createWorld(7);
 	player.move();
 	}
-,16);
+,16.5);
 
 setInterval(function() {
 	Game.timedown--;
