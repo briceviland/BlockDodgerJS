@@ -165,7 +165,11 @@ function randomFall(number) {
 //TIMER
 function drawText() {
 	context.font = "15pt Calibri";
-	context.fillText(Game.timedown,250,20);
+	context.fillText(Game.timedown,260,20);
+	
+	context.fillStyle = "red";
+	context.fillText(player.lives + " Lives Left",15,20);
+	context.fillStyle = "black";
 }
 
 //RENDER SCENE
@@ -181,9 +185,11 @@ function collisionCheck(max) {
 		if(Game.blocks[i].y >= 232 && Game.blocks[i].x <= player.endpos && Game.blocks[i].x >= player.pos) {
 			delete Game.blocks[i];
 			Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+			player.lives--;
 		} else if (Game.blocks[i].y >= 232 && Game.blocks[i].xendpos >= player.pos && Game.blocks[i].xendpos <= player.endpos) {
 			delete Game.blocks[i];
 			Game.blocks[i] = new Block(Math.floor((Math.random()*280)+1),0);
+			player.lives--;
 		}
 	}
 }
