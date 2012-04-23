@@ -1,57 +1,29 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<LINK href="style.css" rel="stylesheet" type="text/css">
-		<title>Block Dodger</title>
+		<link href="style.css" rel="stylesheet" type="text/css">
+		<link href='http://fonts.googleapis.com/css?family=Londrina+Shadow' rel='stylesheet' 
+			type='text/css'>
+		<title>Block Dodger: Slither Games</title>
 	</head>
-
 	<body>
-		<div class="centeredcontent">
-		</br>
-		<table>
-			<tr>
-				<td>
-					<div class="headertitle">
-						Applications
-					</div>
-				</td>
-				<td>
-					<div class="headerlogo">
-						<b>Slither Games</b>
-					</div>
-				</td>
-			</tr>
-		</table>
-		<table>
-
-			<tr>
-				<td>
-
-				<div class="panel1">
-				<ul>
-					<a href="./index.html"><li class="top">Block Dodger</li></a>
-				</ul>
-			</div>
-		</td>
-		<td>
-		<p id="gamename">Block Dodger</p></br>
-		<p id="description">Use "a" and "d" to control the avatar.</p>
+		<hgroup>
+			<h1>Block Dodger</h1>
+			<h2>Slither Games</h2>
+		</hgroup>
+		<section id="game">	
 			<div class="details">
 				<div class="relevant">
-					<canvas width="450" height="450"id="canvas"></canvas>
+					<canvas width="450" height="450" id="canvas"></canvas>
 					<img id="character" src="char.png"/>
-					<script type="text/javascript" src="script.js">
-					</script>
 				</div>
 			</div>
-		<td>
-		</table>
-
-		</br>
-
-
-
-		</div>
+			<details> 
+				<summary>Click Here For Instructions On How To Play</summary>
+				<p>Use "a" to move the avatar left and "d" to move the avatar right</p>
+				<p>Move left and right to avoid falling blocks</p>
+			</details>
+		</section>
+	<script type="text/javascript" src="script.js"></script>
 	</body>
-
 </html>

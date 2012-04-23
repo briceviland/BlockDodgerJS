@@ -15,20 +15,6 @@ var Timer = {
 	timerID : 0,
 }
 
-/*
-Timer.prototype.Start = function(){
-	timedown = 60;
-}
-*/
-
-
-/*
-Timer.prototype.Stop = function(){
-	clearInterval(Timer.timerID);
-	Game.timedown = 60;
-}
-*/
-
 //Character Object
 var Character = function(imgloc,change,startpos,numlives){
 	this.imgsrc = imgloc;
@@ -63,7 +49,7 @@ Character.prototype.move = function() {
 
 	}
 }
-var player = new Character("./char.png","./char1.png",(Game.width/2) - 10,5)
+var player = new Character("./char.png","./char1.png",(Game.width/2)-20,5)
 player.domElement = document.getElementById("character");
 
 var Block = function(xPos,yPos) {
