@@ -8,6 +8,47 @@ var Game = {
 	blocksReady : 1,
 	height : 450,
 	width : 450,
+	blockAmount: 5,
+	state : "game",
+	level : 0,
+}
+
+var level = new Array();
+
+level[0] = {
+	blocks: 3,
+	range: (Game.width-20),
+	speedmultiplier: 1,
+}
+
+level[1] = {
+	blocks : 4,
+	range : (Game.width-25),
+	speedmultiplier: 1.1,
+}
+
+level[2] = {
+	blocks : 5,
+	range : (Game.width-30),
+	speedmultiplier: 1.2,
+}
+
+level[3] = {
+	blocks: 6,
+	range : (Game.width-35),
+	speedmultiplier: 1.3,
+}
+
+level[4] = {
+	blocks : 7,
+	range : (Game.width-40),
+	speedmultiplier: 1.4,
+}
+
+level[5] = {
+	blocks : 8,
+	range : (Game.width-45),
+	speedmultiplier: 1.5,
 }
 
 //Timer Object
@@ -33,7 +74,7 @@ Character.prototype.move = function() {
 		case "w":
 			if(this.pos >= (Game.width - 22)) {
 				break;
-			} else {
+			} else if(Game.state == "game"){
 				this.domElement.src = "char.png";
 				this.pos += this.speed;
 				break;
@@ -41,7 +82,7 @@ Character.prototype.move = function() {
 		case "a":
 			if(this.pos <= 2) {
 				break;
-			} else {
+			} else if(Game.state == "game"){
 				this.domElement.src = "char1.png";
 				this.pos -= this.speed;
 				break;
@@ -134,8 +175,8 @@ function editFlagUp(e) {
 	}
 }
 
-function randomFall(number) {
-	function fallingSquares(max) {
+function randomFall(number,levelnumber) {
+	function fallingSquares(max,number) {
 		if(Game.blocks[max+1]) {
 			for(i=1;i<=max;i++) {
 				drawBox(Game.blocks[i]);
@@ -146,7 +187,7 @@ function randomFall(number) {
 					if(i <=  Game.blocksReady)
 					{
 						Game.blocks[i].y += Game.blocks[i].force;
-						Game.blocks[i].force += Game.blocks[i].accelby;
+						Game.blocks[i].force += (Game.blocks[i].accelby*level[number].speedmultiplier);
 					}
 				}
 			}
@@ -164,23 +205,29 @@ function randomFall(number) {
 		Game.blocks[0] = "active";
 	}
 	if(Game.blocks[0]) {
-		fallingSquares(number);
+		fallingSquares(number,levelnumber);
 	}
 }
 
 //TIMER
 function drawText() {
-	context.font = "15pt Calibri";
-	context.fillText(Game.timedown,Game.width-40,20);
-	
-	context.fillStyle = "red";
-	context.fillText(player.lives + " Lives Left",15,20);
-	context.fillStyle = "black";
+	if(Game.state == "game"){
+		context.font = "15pt Calibri";
+		context.fillText(Game.timedown,Game.width-40,20);
+		
+		context.fillStyle = "red";
+		context.fillText(player.lives + " Lives Left",15,20);
+		context.fillStyle = "black";
+	}
+	else if(Game.state == "over"){
+		context.fillStyle = "red";
+		context.fillText("GAME OVER",100,100);
+	}
 }
 
 //RENDER SCENE
-function renderScene(number) {
-	randomFall(number);
+function renderScene(number,levelnumber) {
+	randomFall(number,levelnumber);
 }
 
 //CHECK COLLISIONS
@@ -200,16 +247,26 @@ function collisionCheck(max) {
 	}
 }
 
-function createWorld(number) {
-	renderScene(number);
-	collisionCheck(number);
+//CHECK IF PLAYER IS ALIVE
+function checkPlayerLives(levelnumber){
+	if(player.lives == 0){
+		level[levelnumber].blocks = 0;
+		Game.state = "over";
+	}
+}
+
+function createWorld(levelnumber) {
+	player.honingRange = level[levelnumber].range;
+
+	renderScene(level[levelnumber].blocks,levelnumber);
+	collisionCheck(level[levelnumber].blocks);
+	checkPlayerLives(levelnumber);
 }
 
 setInterval(function() {
 	context.clearRect(0,0,Game.width,Game.height);
-	
 	//createWorld(number of blocks); Control the amount of blocks.
-	createWorld(7);
+	createWorld(Game.level);
 	player.move();
 	}
 ,16.5);
@@ -217,6 +274,12 @@ setInterval(function() {
 setInterval(function() {
 	Game.timedown--;
 	Game.blocksReady++;
+	if(Game.timedown == 0){
+		
+		Game.level++;
+		Game.timedown = 60;
+		Game.blocksReady = 1;
+
+	}
 	}
 ,1000);
-
