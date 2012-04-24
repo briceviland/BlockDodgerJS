@@ -8,7 +8,37 @@ var Game = {
 	blocksReady : 1,
 	height : 450,
 	width : 450,
-}
+	blockAmount: 5,
+	state : "game",
+	level : 0
+};
+
+var level = [
+{
+	blocks: 3,
+	range: (Game.width-20),
+	speedmultiplier: 1
+} , {
+	blocks : 4,
+	range : (Game.width-25),
+	speedmultiplier: 1.1
+} , {
+	blocks : 5,
+	range : (Game.width-30),
+	speedmultiplier: 1.2
+} , {
+	blocks: 6,
+	range : (Game.width-35),
+	speedmultiplier: 1.3
+} , {
+	blocks : 7,
+	range : (Game.width-40),
+	speedmultiplier: 1.4
+} , {
+	blocks : 8,
+	range : (Game.width-45),
+	speedmultiplier: 1.5
+}];
 
 //Timer Object
 var Timer = {
@@ -33,7 +63,7 @@ Character.prototype.move = function() {
 		case "w":
 			if(this.pos >= (Game.width - 22)) {
 				break;
-			} else {
+			} else if(Game.state == "game"){
 				this.domElement.src = "char.png";
 				this.pos += this.speed;
 				break;
@@ -41,7 +71,7 @@ Character.prototype.move = function() {
 		case "a":
 			if(this.pos <= 2) {
 				break;
-			} else {
+			} else if(Game.state == "game"){
 				this.domElement.src = "char1.png";
 				this.pos -= this.speed;
 				break;
@@ -134,10 +164,12 @@ function editFlagUp(e) {
 	}
 }
 
-function randomFall(number) {
-	function fallingSquares(max) {
-		if(Game.blocks[max+1]) {
-			for(i=1;i<=max;i++) {
+function randomFall(blockCount,intLevel) {
+	this.blockCount = blockCount;
+	this.intLevel = intLevel;
+	var fallingSquares = function () {
+		if(Game.blocks[this.blockCount+1]) {
+			for(i=1;i<=this.blockCount;i++) {
 				drawBox(Game.blocks[i]);
 				if(Game.blocks[i].y >= Game.height - 20) {
 					delete Game.blocks[i];
@@ -146,15 +178,15 @@ function randomFall(number) {
 					if(i <=  Game.blocksReady)
 					{
 						Game.blocks[i].y += Game.blocks[i].force;
-						Game.blocks[i].force += Game.blocks[i].accelby;
+						Game.blocks[i].force += (Game.blocks[i].accelby*level[this.intLevel].speedmultiplier);
 					}
 				}
 			}
 		} else {
-			for(i=1;i<=max;i++) {
+			for(i=1;i<=this.blockCount;i++) {
 				Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 			}
-			Game.blocks[max+1] = "active";
+			Game.blocks[this.blockCount+1] = "active";
 		}
 	}
 	//Timer wont appear unless Game.blocks[0] has been declared
@@ -164,23 +196,29 @@ function randomFall(number) {
 		Game.blocks[0] = "active";
 	}
 	if(Game.blocks[0]) {
-		fallingSquares(number);
+		fallingSquares();
 	}
 }
 
 //TIMER
 function drawText() {
-	context.font = "15pt Calibri";
-	context.fillText(Game.timedown,Game.width-40,20);
-	
-	context.fillStyle = "red";
-	context.fillText(player.lives + " Lives Left",15,20);
-	context.fillStyle = "black";
+	if(Game.state == "game"){
+		context.font = "15pt Calibri";
+		context.fillText(Game.timedown,Game.width-40,20);
+		
+		context.fillStyle = "red";
+		context.fillText(player.lives + " Lives Left",15,20);
+		context.fillStyle = "black";
+	}
+	else if(Game.state == "over"){
+		context.fillStyle = "red";
+		context.fillText("GAME OVER",100,100);
+	}
 }
 
 //RENDER SCENE
-function renderScene(number) {
-	randomFall(number);
+function renderScene(blockCount,intLevel) {
+	randomFall(blockCount,intLevel);
 }
 
 //CHECK COLLISIONS
@@ -200,16 +238,26 @@ function collisionCheck(max) {
 	}
 }
 
-function createWorld(number) {
-	renderScene(number);
-	collisionCheck(number);
+//CHECK IF PLAYER IS ALIVE
+function checkPlayerLives(intLevel){
+	if(player.lives === 0){
+		level[intLevel].blocks = 0;
+		Game.state = "over";
+	}
+}
+
+function createWorld(intLevel) {
+	player.honingRange = level[intLevel].range;
+
+	renderScene(level[intLevel].blocks,intLevel);
+	collisionCheck(level[intLevel].blocks);
+	checkPlayerLives(intLevel);
 }
 
 setInterval(function() {
 	context.clearRect(0,0,Game.width,Game.height);
-	
 	//createWorld(number of blocks); Control the amount of blocks.
-	createWorld(7);
+	createWorld(Game.level);
 	player.move();
 	}
 ,16.5);
@@ -217,6 +265,12 @@ setInterval(function() {
 setInterval(function() {
 	Game.timedown--;
 	Game.blocksReady++;
+	if(Game.timedown === 0){
+		
+		Game.level++;
+		Game.timedown = 60;
+		Game.blocksReady = 1;
+
+	}
 	}
 ,1000);
-
