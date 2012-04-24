@@ -10,46 +10,35 @@ var Game = {
 	width : 450,
 	blockAmount: 5,
 	state : "game",
-	level : 0,
-}
+	level : 0
+};
 
-var level = new Array();
-
-level[0] = {
+var level = [
+{
 	blocks: 3,
 	range: (Game.width-20),
-	speedmultiplier: 1,
-}
-
-level[1] = {
+	speedmultiplier: 1
+} , {
 	blocks : 4,
 	range : (Game.width-25),
-	speedmultiplier: 1.1,
-}
-
-level[2] = {
+	speedmultiplier: 1.1
+} , {
 	blocks : 5,
 	range : (Game.width-30),
-	speedmultiplier: 1.2,
-}
-
-level[3] = {
+	speedmultiplier: 1.2
+} , {
 	blocks: 6,
 	range : (Game.width-35),
-	speedmultiplier: 1.3,
-}
-
-level[4] = {
+	speedmultiplier: 1.3
+} , {
 	blocks : 7,
 	range : (Game.width-40),
-	speedmultiplier: 1.4,
-}
-
-level[5] = {
+	speedmultiplier: 1.4
+} , {
 	blocks : 8,
 	range : (Game.width-45),
-	speedmultiplier: 1.5,
-}
+	speedmultiplier: 1.5
+}];
 
 //Timer Object
 var Timer = {
@@ -175,10 +164,12 @@ function editFlagUp(e) {
 	}
 }
 
-function randomFall(number,levelnumber) {
-	function fallingSquares(max,number) {
-		if(Game.blocks[max+1]) {
-			for(i=1;i<=max;i++) {
+function randomFall(blockCount,intLevel) {
+	this.blockCount = blockCount;
+	this.intLevel = intLevel;
+	var fallingSquares = function () {
+		if(Game.blocks[this.blockCount+1]) {
+			for(i=1;i<=this.blockCount;i++) {
 				drawBox(Game.blocks[i]);
 				if(Game.blocks[i].y >= Game.height - 20) {
 					delete Game.blocks[i];
@@ -187,15 +178,15 @@ function randomFall(number,levelnumber) {
 					if(i <=  Game.blocksReady)
 					{
 						Game.blocks[i].y += Game.blocks[i].force;
-						Game.blocks[i].force += (Game.blocks[i].accelby*level[number].speedmultiplier);
+						Game.blocks[i].force += (Game.blocks[i].accelby*level[this.intLevel].speedmultiplier);
 					}
 				}
 			}
 		} else {
-			for(i=1;i<=max;i++) {
+			for(i=1;i<=this.blockCount;i++) {
 				Game.blocks[i] = new Block(Math.floor((Math.random()* (player.honingRange))+player.pos-(player.honingRange/2)),0);
 			}
-			Game.blocks[max+1] = "active";
+			Game.blocks[this.blockCount+1] = "active";
 		}
 	}
 	//Timer wont appear unless Game.blocks[0] has been declared
@@ -205,7 +196,7 @@ function randomFall(number,levelnumber) {
 		Game.blocks[0] = "active";
 	}
 	if(Game.blocks[0]) {
-		fallingSquares(number,levelnumber);
+		fallingSquares();
 	}
 }
 
@@ -226,8 +217,8 @@ function drawText() {
 }
 
 //RENDER SCENE
-function renderScene(number,levelnumber) {
-	randomFall(number,levelnumber);
+function renderScene(blockCount,intLevel) {
+	randomFall(blockCount,intLevel);
 }
 
 //CHECK COLLISIONS
@@ -248,19 +239,19 @@ function collisionCheck(max) {
 }
 
 //CHECK IF PLAYER IS ALIVE
-function checkPlayerLives(levelnumber){
-	if(player.lives == 0){
-		level[levelnumber].blocks = 0;
+function checkPlayerLives(intLevel){
+	if(player.lives === 0){
+		level[intLevel].blocks = 0;
 		Game.state = "over";
 	}
 }
 
-function createWorld(levelnumber) {
-	player.honingRange = level[levelnumber].range;
+function createWorld(intLevel) {
+	player.honingRange = level[intLevel].range;
 
-	renderScene(level[levelnumber].blocks,levelnumber);
-	collisionCheck(level[levelnumber].blocks);
-	checkPlayerLives(levelnumber);
+	renderScene(level[intLevel].blocks,intLevel);
+	collisionCheck(level[intLevel].blocks);
+	checkPlayerLives(intLevel);
 }
 
 setInterval(function() {
@@ -274,7 +265,7 @@ setInterval(function() {
 setInterval(function() {
 	Game.timedown--;
 	Game.blocksReady++;
-	if(Game.timedown == 0){
+	if(Game.timedown === 0){
 		
 		Game.level++;
 		Game.timedown = 60;
