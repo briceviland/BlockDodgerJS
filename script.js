@@ -1,43 +1,186 @@
 var context = document.getElementById("canvas").getContext("2d");
 
+// helper functions --------
+// the clone function is what drives the inheritance pattern in this script
+function clone(object) {
+	function OneShotConstructor(){};
+	OneShotConstructor.prototype = object;
+	return new OneShotConstructor();
+}
+function getRandomInt (intSalt) {
+	return Math.floor(Math.random() * intSalt)
+}
+function targetCharacter(plyObj) {
+	return getRandomInt(plyObj.honingRange)+plyObj.pos-(plyObj.honingRange/2);
+}
+
+//Check Mouse Position if moved
+$(canvas).mousemove(function(e){
+		var offset = $(canvas).offset();
+		gm.x = e.clientX - offset.left;
+		gm.y = e.clientY - offset.top;
+});
+$(canvas).click(function(e){
+		var offset = $(canvas).offset();
+		gm.x = e.clientX - offset.left;
+		gm.y = e.clientY - offset.top;
+		gm.click = true;
+});
+
+
 //Game Object
-var Game = {
-	flag : 1,
-	blocks : [],
-	timedown : 60,
-	blocksReady : 1,
-	height : 450,
-	width : 450,
-	blockAmount: 5,
-	state : "pause",
-	level : 0,
-	seed : false,
-	spikes : [],
-	spikesReady : 1,
-	spikeAmount : 5,
+function Game() {
+	this.flag = 1;
+	this.blocks = [];
+	this.timedown = 60;
+	this.height = 450;
+	this.width = 450;
+	this.state = "pause";
+	this.level = 0;
+	this.seed = false;
+	this.spikes = [];
+	this.x = 10;
+	this.y = 10;
+	this.click = false;
+	this.date = new Date();
+	this.framefix = 0;
+	
 };
 
-function loadLevelPack(url, callback)
-{
-    // adding the script tag to the head as suggested before
-   var head = document.getElementsByTagName('head')[0];
-   var script = document.createElement('script');
-   script.type = 'text/javascript';
-   script.src = url;
+Game.prototype.drawHUD = function() {
+	if(this.state == "game"){
+		context.font = "15pt Calibri";
+		context.fillText(this.timedown,this.width-40,20);
+		
+		context.fillStyle = "red";
+		context.fillText(player.lives + " Lives Left",15,20);
+		context.fillStyle = "black";
+	}
+	else if(this.state == "over"){
+		context.fillStyle = "red";
+		context.fillText("GAME OVER",100,100);
+	}
+	else if(this.state == "pause"){
+		context.fillStyle = "red";
+		context.fillText("Waiting For Game Load",100,100);
+	}
+	else if(this.state == "menu"){
+		menuMain.drawItems();
+		
+	}
+	else if(this.state == "win"){
+		context.fillStyle = "red";
+		context.fillText("Congratulations!",100,100);
+	}
+}
 
-   // then bind the event to the callback function 
-   // there are several events for cross browser compatibility
-   script.onload = callback;
-
-   // fire the loading
-   head.appendChild(script);
+function loadExternalScripts(url,url2,callback){
+var body = document.getElementsByTagName('body')[0];
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = url;
+body.appendChild(script);
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = url2;
+script.onload = callback;
+body.appendChild(script);
 }
 
 var loadLevelCallBack = function() {
-	Game.state = "game";
+	//Creating a menu. (text,x,y,width,size)
+	menuMain = new MenuCreation('Play Game!',50,50,90,25,'Shop',50,120,40,25,'Customize',50,190,90,25);
+	gm.state = "menu";
 };
 
-loadLevelPack("levelpack.js", loadLevelCallBack);
+loadExternalScripts("levelpack.js","menu.js", loadLevelCallBack);
+
+function Block(xwf) {
+		// set the value of x based on current game state
+		if(xwf.x <= 0) {
+			this.x = xwf.x + player.honingRange;
+		} else if (xwf.x >= xwf.width-20) {
+			this.x = xwf.x - player.honingRange;
+		} else {
+			this.x = xwf.x;
+		}
+	this.y = 0;
+	this.xendpos = this.x + 20;
+	// if the f argument is undefined, default to the right (2.5)
+	this.force = (xwf.force || 2.5);
+	this.resetForce = this.force;
+	this.accelby = 0.008;
+};
+Block.prototype.draw = function(){
+	context.fillStyle = "black";
+	context.beginPath();
+	context.moveTo(this.x,this.y);
+	context.lineTo(this.x+20,this.y);
+	context.lineTo(this.x+20,this.y+20);
+	context.lineTo(this.x,this.y+20);
+	context.fill();
+};
+Block.prototype.fall = function() {
+	this.draw();
+	if(this.y <= gm.height - 20) {
+		this.y += this.force;
+		this.force += (this.accelby * level[gm.level].speedmultiplier);	
+	} else {
+		this.remove();
+	}
+};
+Block.prototype.remove = function() {
+	context.clearRect(this.x,this.y-1,20,22);
+	this.x = getRandomInt(player.honingRange);
+	this.y = 0;
+	this.force = this.resetForce;
+};
+Block.prototype.impact = function() {
+	player.lives--;
+};
+
+function Spike(xwf) {
+	Block.call(this, xwf);
+	this.accelby = 0.020;
+	this.force = (xwf.force || 2.9);
+};
+Spike.prototype = clone(Block.prototype);
+Spike.prototype.constructor = Spike;
+Spike.prototype.draw = function() {
+	context.fillStyle = "red";
+	context.beginPath();
+	context.moveTo(this.x,this.y);
+	context.lineTo(this.x+20,this.y);
+	context.lineTo(this.x+10,this.y+20);
+	context.lineTo(this.x,this.y);
+	context.fill();
+};
+Spike.prototype.impact = function() {
+	player.lives--;
+	player.speed--;
+	setTimeout(function(){(player.speed++) * level[gm.level].speedmultiplier;},1000);
+};
+
+function Orb(xwf) {
+	Block.call(this, xwf);
+	this.accelby = 0.005;
+};
+Orb.prototype = clone(Block.prototype);
+Orb.prototype.constructor = Orb;
+Orb.prototype.draw = function() {
+	var circle_grad = context.createRadialGradient(this.x-3,this.y-3,1,this.x,this.y, Math.PI*2);
+	circle_grad.addColorStop(0, "#fff");
+	circle_grad.addColorStop(1, "blue");
+	context.fillStyle = circle_grad;
+	context.beginPath();
+	context.arc(this.x, this.y, 10, 0, Math.PI*2, true);
+	context.fill();
+};
+Orb.prototype.impact = function() {
+	player.lives++;
+	player.speed++;
+	setTimeout(function(){(player.speed--) * level[gm.level].speedmultiplier;},1000);
+};
 
 //Character Object
 var Character = function(imgloc,change,startpos,numlives){
@@ -49,15 +192,15 @@ var Character = function(imgloc,change,startpos,numlives){
 	this.domElement = "";
 	this.lives = numlives;
 	this.speed = 2.0;
-	this.honingRange = 125;
+	this.honingRange = gm.width;
 }
 Character.prototype.move = function() {	
 	this.domElement.style.left = this.pos + "px";
-	switch(Game.flag) {
+	switch(gm.flag) {
 		case "w":
-			if(this.pos >= (Game.width - 22)) {
+			if(this.pos >= (gm.width - 22)) {
 				break;
-			} else if(Game.state == "game"){
+			} else if(gm.state == "game"){
 				this.domElement.src = "char.png";
 				this.pos += this.speed;
 				break;
@@ -65,7 +208,7 @@ Character.prototype.move = function() {
 		case "a":
 			if(this.pos <= 2) {
 				break;
-			} else if(Game.state == "game"){
+			} else if(gm.state == "game"){
 				this.domElement.src = "char1.png";
 				this.pos -= this.speed;
 				break;
@@ -73,7 +216,6 @@ Character.prototype.move = function() {
 
 	}
 }
-
 Character.prototype.isAlive = function() {
 	if(this.lives === 0){
 		return false;
@@ -83,80 +225,19 @@ Character.prototype.isAlive = function() {
 	}
 }
 
-var player = new Character("./char.png","./char1.png",(Game.width/2)-20,5)
-player.domElement = document.getElementById("character");
-
-var Block = function(xPos,yPos) {
-	if(xPos <= 0)
-	{
-		this.x = xPos + player.honingRange;
-	}
-	else if (xPos >= Game.width-20)
-	{
-		this.x = xPos - player.honingRange;
-	}
-	else
-	{
-		this.x = xPos;
-	}
-	this.y = yPos;
-	this.xendpos = this.x + 20;
-	this.force = 2.5;
-	this.accelby = 0.008;
-}
-
-var Spike = function(xPos,yPos) {
-	if(xPos <= 0)
-	{
-		this.x = xPos + player.honingRange;
-	}
-	else if (xPos >= Game.width-20)
-	{
-		this.x = xPos - player.honingRange;
-	}
-	else
-	{
-		this.x = xPos;
-	}
-	this.y = yPos;
-	this.xendpos = this.x + 20;
-	this.force = 2.9;
-	this.accelby = 0.020;
-};
-
+//Key Checker
 document.onkeydown = editFlagDown;
 document.onkeyup = editFlagUp;
 
-function drawBox(thing3) {
-	context.fillStyle = "black";
-	context.beginPath();
-	context.moveTo(thing3.x,thing3.y);
-	context.lineTo(thing3.x+20,thing3.y);
-	context.lineTo(thing3.x+20,thing3.y+20);
-	context.lineTo(thing3.x,thing3.y+20);
-	context.fill();
-}
-
-function drawSpike(thing4) {
-	context.fillStyle = "red";
-	context.beginPath();
-	context.moveTo(thing4.x,thing4.y);
-	context.lineTo(thing4.x+20,thing4.y);
-	context.lineTo(thing4.x+10,thing4.y+20);
-	context.lineTo(thing4.x,thing4.y);
-	context.fill();
-}
-
-//Key Checker
 function editFlagDown(e){
 	var key = (window.event) ? event.keyCode : e.keyCode;
 	switch(key){
 		case 68:
-			Game.flag = "w";
+			gm.flag = "w";
 			player.pressedKey[key] = 1;
 			break;
 		case 65:
-			Game.flag = "a";
+			gm.flag = "a";
 			player.pressedKey[key] = 1;
 			break;		
 	}
@@ -166,30 +247,30 @@ function editFlagUp(e) {
 	var key = (window.event) ? event.keyCode : e.keyCode;
 	switch(key){
 		case 68:
-		if(Game.flag != "w"){
+		if(gm.flag != "w"){
 			player.pressedKey[68] = 0;
 			break;
 		} else {
 			if(player.pressedKey[65] == 1) {
 				player.pressedKey[68] = 0;
-				Game.flag = "a";
+				gm.flag = "a";
 			} else {
-				Game.flag = "1";
+				gm.flag = "1";
 				player.pressedKey[68] = 0;
 				player.pressedKey[65] = 0;
 				}
 				break;
 			}
 		case 65:
-		if(Game.flag != "a") {
+		if(gm.flag != "a") {
 			player.pressedKey[65] = 0;
 			break;
 		} else {
 			if(player.pressedKey[68] == 1) {
 				player.pressedKey[65] = 0;
-				Game.flag = "w";
+				gm.flag = "w";
 			} else {
-				Game.flag = "1";
+				gm.flag = "1";
 				player.pressedKey[65] = 0;
 				player.pressedKey[68] = 0;
 			}
@@ -198,168 +279,89 @@ function editFlagUp(e) {
 	}
 }
 
-var getRandom = function (intSalt) {
-	return Math.floor(Math.random() * intSalt)
-}
-
-function randomFall(blockCount, spikeCount, intLevel) {
-	this.blockCount = blockCount;
-	this.spikeCount = spikeCount;
-	this.intLevel = intLevel;
-	this.arrObjSelect = [0,0,0,0,1,0,1,1,1];
-	this.spikeFalling = function(bc) {
-		drawSpike(Game.spikes[bc]);
-		if(Game.spikes[bc].y >= Game.height - 20) {
-			delete Game.spikes[bc];
-			Game.spikes[bc] = new Spike(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-		} else {
-			if(bc <=  Game.spikesReady)
-			{
-				Game.spikes[bc].y += Game.spikes[bc].force;
-				Game.spikes[bc].force += (Game.spikes[bc].accelby*level[this.intLevel].speedmultiplier);
-			}
-		}
-	}
-	this.blockFalling = function(bc) {
-		drawBox(Game.blocks[bc]);
-		if(Game.blocks[bc].y >= Game.height - 20) {
-			delete Game.blocks[bc];
-			Game.blocks[bc] = new Block(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-		} else {
-			if(bc <=  Game.blocksReady)
-			{
-				Game.blocks[bc].y += Game.blocks[bc].force;
-				Game.blocks[bc].force += (Game.blocks[bc].accelby*level[this.intLevel].speedmultiplier);
-			}
-		}		
-	}
-	var fallingSquares = function () {
-		if(Game.blocks[this.blockCount+1]) {
-			for(bc1=1;bc1<=this.blockCount;bc1++) {
-				(this.arrObjSelect[bc1] == 1) ? this.spikeFalling(bc1) : this.blockFalling(bc1);
-			}
-		} else {
-			for(bc2=1;bc2<=this.blockCount;bc2++) {
-				Game.blocks[bc2] = new Block(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-				Game.spikes[bc2] = new Spike(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-			}
-			Game.blocks[this.blockCount+1] = "active";
-		}
-	}
-	//Timer wont appear unless Game.blocks[0] has been declared
-	if(Game.blocks[0]) {
-		drawText();
-	} else {
-		Game.blocks[0] = "active";
-	}
-	if(Game.blocks[0]) {
-		fallingSquares();
-	}
-}
-
-//TIMER
-function drawText() {
-	if(Game.state == "game"){
-		context.font = "15pt Calibri";
-		context.fillText(Game.timedown,Game.width-40,20);
-		
-		context.fillStyle = "red";
-		context.fillText(player.lives + " Lives Left",15,20);
-		context.fillStyle = "black";
-	}
-	else if(Game.state == "over"){
-		context.fillStyle = "red";
-		context.fillText("GAME OVER",100,100);
-	}
-	else if(Game.state == "pause"){
-		context.fillStyle = "red";
-		context.fillText("Waiting For Level Load",100,100);
-	}
-	else if(Game.state == "win"){
-		context.fillStyle = "red";
-		context.fillText("Congratulations!",100,100);
-	}
-}
 
 //RENDER SCENE
-function renderScene(blockCount,spikeCount,intLevel) {
-	randomFall(blockCount,spikeCount,intLevel);
+function renderScene() {
+	for (var bc = 0; bc <= level[gm.level].blocks; bc++) {
+		// works well, but starts to err once we go past defined levels
+		if(!(gm.state == "over")) {
+			gm.blocks[bc].fall();
+		}
+		else {
+			break;
+		}
+	};
 }
 
 //CHECK COLLISIONS
 function collisionCheck(max, intLevel) {
 	player.endpos = player.pos + 20;
-	for(cc=1;cc<=max;cc++) {
-		Game.blocks[cc].xendpos = Game.blocks[cc].x + 20;
-		if(Game.blocks[cc].y >= Game.height - 68 && Game.blocks[cc].x <= player.endpos && Game.blocks[cc].x >= player.pos) {
-			delete Game.blocks[cc];
-			Game.blocks[cc] = new Block(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-			player.lives--;
+	for(cc=0;cc<=max;cc++) {
+		gm.blocks[cc].xendpos = gm.blocks[cc].x + 20;
+		if(gm.blocks[cc].y >= gm.height - 64 && gm.blocks[cc].x <= player.endpos && gm.blocks[cc].x >= player.pos) {
+			gm.blocks[cc].remove();
+			gm.blocks[cc].impact();
+
  		} 
- 		else if(Game.blocks[cc].y >= Game.height - 68 && Game.blocks[cc].xendpos >= player.pos && Game.blocks[cc].xendpos <= player.endpos) {
-			delete Game.blocks[cc];
-			Game.blocks[cc] = new Block(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-			player.lives--;
-		}
-		Game.spikes[cc].xendpos = Game.spikes[cc].x + 20;
-		if(Game.spikes[cc].y >= Game.height - 68 && Game.spikes[cc].x <= player.endpos && Game.spikes[cc].x >= player.pos) {
-			delete Game.spikes[cc];
-			Game.spikes[cc] = new Spike(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-			player.speed--;
-			player.lives--;
-			setTimeout(function(){(player.speed++) * level[intLevel].speedmultiplier;},1000);
- 		} 
- 		else if(Game.spikes[cc].y >= Game.height - 68 && Game.spikes[cc].xendpos >= player.pos && Game.spikes[cc].xendpos <= player.endpos) {
-			delete Game.spikes[cc];
-			Game.spikes[cc] = new Spike(getRandom(player.honingRange)+player.pos-(player.honingRange/2),0);
-			player.speed--;
-			player.lives--;
-			setTimeout(function(){(player.speed++) * level[intLevel].speedmultiplier;},1000);
+ 		else if(gm.blocks[cc].y >= gm.height - 64 && gm.blocks[cc].xendpos >= player.pos && gm.blocks[cc].xendpos <= player.endpos) {
+			gm.blocks[cc].remove();
+			gm.blocks[cc].impact();
 		}
 	}
 }
 
 function createWorld(intLevel) {
-	if(Game.state == "pause" || Game.state == "win"){
-		drawText();
+	// clear canvas on each call for redraw
+	context.clearRect(0,0,gm.width,gm.height);
+	if(gm.state == "pause" || gm.state == "win"){
+		gm.drawHUD();
 	}
-	else if(Game.level == Game.seed){
-		Game.state = "win";
+	else if(gm.state == "menu"){
+		renderScene();
+		gm.drawHUD();
+	}
+	else if(gm.level === gm.seed){
+		gm.state = "win";
 	}
 	else{
 		player.honingRange = level[intLevel].range;
-		renderScene(level[intLevel].blocks,level[intLevel].spikes,intLevel);
+		gm.drawHUD();		
+		renderScene();
+		player.move();
 		collisionCheck(level[intLevel].blocks, intLevel);
 			if(!player.isAlive()) {
-				Game.state = "over";
+				gm.state = "over";
 				level[intLevel].blocks = 0;
 			}
 	}
+	setTimeout(function(){createWorld(gm.level);},(17));
 }
 
-setInterval(function() {
-	context.clearRect(0,0,Game.width,Game.height);
-	//createWorld(number of blocks); Control the amount of blocks.
-	createWorld(Game.level);
-	player.move();
-	}
-,16.5);
+// Initialize Game ------
+var gm = new Game();
+var player = new Character("./char.png","./char1.png",(gm.width/2)-20,5)
+player.domElement = document.getElementById("character");
+gm.blocks[0] = new Block({x:targetCharacter(player),width:gm.width-40,force:2.3});
+gm.blocks[1] = new Block({x:targetCharacter(player),width:gm.width-40,force:2.4});
+gm.blocks[2] = new Block({x:targetCharacter(player),width:gm.width-40,force:2.6});
+gm.blocks[3] = new Block({x:targetCharacter(player),width:gm.width-40});
+gm.blocks[4] = new Spike({x:targetCharacter(player),width:gm.width-40});
+gm.blocks[5] = new Spike({x:targetCharacter(player),width:gm.width-40,force:3.0});
+gm.blocks[6] = new Block({x:targetCharacter(player),width:gm.width-40,force:2.7});
+gm.blocks[7] = new Orb({x:targetCharacter(player),width:gm.width-40});
+gm.blocks[8] = new Spike({x:targetCharacter(player),width:gm.width-40,force:3.1});
+gm.blocks[9] = new Spike({x:targetCharacter(player),width:gm.width-40,force:3.2});
 
-setInterval(function() {
-	if(Game.state == "pause" || Game.state == "win"){
-		
-	}
-	else{
-		Game.timedown--;
-		Game.blocksReady++;
-		Game.spikesReady++;
-		if(Game.timedown === 0){
-			Game.level++;
-			Game.state == "win";
-			Game.timedown = 60;
-			Game.blocksReady = 1;
-			Game.spikesReady = 1;
+//Enter the game loop
+setTimeout(function(){createWorld(gm.level);},(33.333 - gm.framefix));
+
+//If in game the countdown begins
+setInterval(function(){
+	if(gm.state === "game"){
+	gm.timedown--;
+		if(gm.timedown === 0){
+			gm.level++;
+			gm.timedown = 60;
 		}
 	}
-	}
-,1000);
+},1000);
