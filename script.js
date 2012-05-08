@@ -1,4 +1,5 @@
-var context = document.getElementById("canvas").getContext("2d");
+var context = document.getElementById("scene").getContext("2d");
+var blood = document.getElementById("blood").getContext("2d");
 
 // helper functions --------
 // the clone function is what drives the inheritance pattern in this script
@@ -13,21 +14,6 @@ function getRandomInt (intSalt) {
 function targetCharacter(plyObj) {
 	return getRandomInt(plyObj.honingRange)+plyObj.pos-(plyObj.honingRange/2);
 }
-
-//Check Mouse Position if moved
-$(canvas).mousemove(function(e){
-		var offset = $(canvas).offset();
-		gm.x = e.clientX - offset.left;
-		gm.y = e.clientY - offset.top;
-});
-$(canvas).click(function(e){
-		var offset = $(canvas).offset();
-		gm.x = e.clientX - offset.left;
-		gm.y = e.clientY - offset.top;
-		gm.click = true;
-});
-
-
 //Game Object
 function Game() {
 	this.flag = 1;
@@ -44,6 +30,8 @@ function Game() {
 	this.click = false;
 	this.date = new Date();
 	this.framefix = 0;
+	this.bloodleft = new Image();
+	this.bloodright = new Image();
 	
 };
 
@@ -62,7 +50,8 @@ Game.prototype.drawHUD = function() {
 	}
 	else if(this.state == "pause"){
 		context.fillStyle = "red";
-		context.fillText("Waiting For Game Load",100,100);
+		context.fillText("Game\nPaused",100,300);
+		menuPause.drawItems();
 	}
 	else if(this.state == "menu"){
 		menuMain.drawItems();
@@ -85,15 +74,16 @@ script.type = 'text/javascript';
 script.src = url2;
 script.onload = callback;
 body.appendChild(script);
+gm.bloodleft.src = "blood.png";
+gm.bloodright.src = "blood1.png";
 }
 
 var loadLevelCallBack = function() {
-	//Creating a menu. (text,x,y,width,size)
-	menuMain = new MenuCreation('Play Game!',50,50,90,25,'Shop',50,120,40,25,'Customize',50,190,90,25);
+	//Creating a menu. (text,x,y,width,size,gm.state to go into)
+	menuMain = new MenuCreation('Play Game!',50,50,90,25,'game','Shop',50,120,40,25,'menu','Customize',50,190,90,25,'menu');
+	menuPause = new MenuCreation('Resume!',50,50,80,25,'game','Exit to menu...',50,120,130,25,'menu');
 	gm.state = "menu";
 };
-
-loadExternalScripts("levelpack.js","menu.js", loadLevelCallBack);
 
 function Block(xwf) {
 		// set the value of x based on current game state
@@ -135,8 +125,16 @@ Block.prototype.remove = function() {
 	this.y = 0;
 	this.force = this.resetForce;
 };
-Block.prototype.impact = function() {
+Block.prototype.impact = function(leftorright) {
 	player.lives--;
+	if(leftorright === "right"){
+		player.pos += 3;
+		blood.drawImage(gm.bloodleft, player.pos-50, this.y);
+	}
+	if(leftorright === "left"){
+		player.pos -= 3;
+		blood.drawImage(gm.bloodright, player.endpos, this.y);
+	}
 };
 
 function Spike(xwf) {
@@ -197,7 +195,7 @@ var Character = function(imgloc,change,startpos,numlives){
 Character.prototype.move = function() {	
 	this.domElement.style.left = this.pos + "px";
 	switch(gm.flag) {
-		case "w":
+		case "d":
 			if(this.pos >= (gm.width - 22)) {
 				break;
 			} else if(gm.state == "game"){
@@ -225,65 +223,9 @@ Character.prototype.isAlive = function() {
 	}
 }
 
-//Key Checker
-document.onkeydown = editFlagDown;
-document.onkeyup = editFlagUp;
-
-function editFlagDown(e){
-	var key = (window.event) ? event.keyCode : e.keyCode;
-	switch(key){
-		case 68:
-			gm.flag = "w";
-			player.pressedKey[key] = 1;
-			break;
-		case 65:
-			gm.flag = "a";
-			player.pressedKey[key] = 1;
-			break;		
-	}
-
-}
-function editFlagUp(e) {
-	var key = (window.event) ? event.keyCode : e.keyCode;
-	switch(key){
-		case 68:
-		if(gm.flag != "w"){
-			player.pressedKey[68] = 0;
-			break;
-		} else {
-			if(player.pressedKey[65] == 1) {
-				player.pressedKey[68] = 0;
-				gm.flag = "a";
-			} else {
-				gm.flag = "1";
-				player.pressedKey[68] = 0;
-				player.pressedKey[65] = 0;
-				}
-				break;
-			}
-		case 65:
-		if(gm.flag != "a") {
-			player.pressedKey[65] = 0;
-			break;
-		} else {
-			if(player.pressedKey[68] == 1) {
-				player.pressedKey[65] = 0;
-				gm.flag = "w";
-			} else {
-				gm.flag = "1";
-				player.pressedKey[65] = 0;
-				player.pressedKey[68] = 0;
-			}
-			break;
-		}
-	}
-}
-
-
 //RENDER SCENE
 function renderScene() {
 	for (var bc = 0; bc <= level[gm.level].blocks; bc++) {
-		// works well, but starts to err once we go past defined levels
 		if(!(gm.state == "over")) {
 			gm.blocks[bc].fall();
 		}
@@ -299,13 +241,13 @@ function collisionCheck(max, intLevel) {
 	for(cc=0;cc<=max;cc++) {
 		gm.blocks[cc].xendpos = gm.blocks[cc].x + 20;
 		if(gm.blocks[cc].y >= gm.height - 64 && gm.blocks[cc].x <= player.endpos && gm.blocks[cc].x >= player.pos) {
+			gm.blocks[cc].impact("left");
 			gm.blocks[cc].remove();
-			gm.blocks[cc].impact();
 
  		} 
  		else if(gm.blocks[cc].y >= gm.height - 64 && gm.blocks[cc].xendpos >= player.pos && gm.blocks[cc].xendpos <= player.endpos) {
+			gm.blocks[cc].impact("right");
 			gm.blocks[cc].remove();
-			gm.blocks[cc].impact();
 		}
 	}
 }
@@ -319,6 +261,10 @@ function createWorld(intLevel) {
 	else if(gm.state == "menu"){
 		renderScene();
 		gm.drawHUD();
+		gm.level = 0;
+		player.lives = 5;
+		blood.clearRect(0,0,gm.width,gm.height);
+		gm.timedown = 60;
 	}
 	else if(gm.level === gm.seed){
 		gm.state = "win";
@@ -339,6 +285,7 @@ function createWorld(intLevel) {
 
 // Initialize Game ------
 var gm = new Game();
+loadExternalScripts("levelpack.js","menu.js", loadLevelCallBack);
 var player = new Character("./char.png","./char1.png",(gm.width/2)-20,5)
 player.domElement = document.getElementById("character");
 gm.blocks[0] = new Block({x:targetCharacter(player),width:gm.width-40,force:2.3});
@@ -361,7 +308,85 @@ setInterval(function(){
 	gm.timedown--;
 		if(gm.timedown === 0){
 			gm.level++;
+			//Clear blood splatters on next level
+			blood.clearRect(0,0,gm.width,gm.height);
 			gm.timedown = 60;
 		}
 	}
 },1000);
+
+//Key Handlers
+$("#blood").mousemove(function(e){
+		var offset = $("#blood").offset();
+		gm.x = e.clientX - offset.left;
+		gm.y = e.clientY - offset.top;
+});
+$("#blood").click(function(e){
+		var offset = $("#blood").offset();
+		gm.x = e.clientX - offset.left;
+		gm.y = e.clientY - offset.top;
+		gm.click = true;
+});
+$(document).keydown(function(e){
+	var keycode = e.keyCode;
+	switch(keycode){
+		case 68:
+			gm.flag = "d";
+			player.pressedKey[keycode] = 1;
+			break;
+		case 65:
+			gm.flag = "a";
+			player.pressedKey[keycode] = 1;
+			break;		
+		case 27:
+			if(gm.state == "pause"){
+				gm.state = "game";
+				break;
+			}
+			else if(gm.state == "menu"){
+				break;
+			}
+			else{
+				gm.state = "pause";
+				break;
+			}
+	}
+});
+$(document).keyup(function(e){
+	var keycode = e.keyCode;
+	switch(keycode){
+		case 68:
+		if(gm.flag != "d"){
+			player.pressedKey[keycode] = 0;
+			break;
+		} else {
+			if(player.pressedKey[65] == 1) {
+				player.pressedKey[keycode] = 0;
+				gm.flag = "a";
+			} else {
+				gm.flag = "1";
+				player.pressedKey[keycode] = 0;
+				player.pressedKey[65] = 0;
+				}
+				break;
+			}
+		case 65:
+		if(gm.flag != "a") {
+			player.pressedKey[keycode] = 0;
+			break;
+		} else {
+			if(player.pressedKey[68] == 1) {
+				player.pressedKey[keycode] = 0;
+				gm.flag = "d";
+			} else {
+				gm.flag = "1";
+				player.pressedKey[keycode] = 0;
+				player.pressedKey[68] = 0;
+			}
+			break;
+		}
+	}
+});
+
+
+
